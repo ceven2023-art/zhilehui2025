@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>知乐会 - 知识问答</title>
+    <title>知乐会 - 知识问答活动</title>
     <style>
         * {
             margin: 0;
@@ -462,8 +462,42 @@
         let currentQuestion = null;
         let answerRevealed = false;
         let randomInterval = null;
-        let randomIndex = 0;
+        let currentRandomIndex = null;
         let randomActive = false;
+
+        const weightOverrides = new Map([
+            ['music', 0.45]
+        ]);
+
+        const categoryWeights = categories.map(category => {
+            const weight = weightOverrides.get(category.id);
+            return typeof weight === 'number' && weight > 0 ? weight : 1;
+        });
+
+        const pickWeightedIndex = (excludeIndex = null) => {
+            if (!categories.length) return null;
+            let total = 0;
+            categoryWeights.forEach((weight, idx) => {
+                if (weight > 0 && idx !== excludeIndex) {
+                    total += weight;
+                }
+            });
+            if (total <= 0) {
+                return excludeIndex !== null && categories.length > 1
+                    ? (excludeIndex + 1) % categories.length
+                    : 0;
+            }
+            let rand = Math.random() * total;
+            for (let i = 0; i < categories.length; i++) {
+                const weight = categoryWeights[i];
+                if (weight <= 0 || i === excludeIndex) continue;
+                if (rand < weight) {
+                    return i;
+                }
+                rand -= weight;
+            }
+            return categories.length - 1;
+        };
 
         function renderCategoryGrid() {
             if (!categoryGrid) return;
@@ -497,6 +531,11 @@
 
         function startRandom() {
             if (randomActive) return;
+            if (!categories.length) {
+                questionType.textContent = '暂无可用类别';
+                questionText.textContent = '题库为空，无法进行随机抽取。';
+                return;
+            }
             randomActive = true;
             randomBtn.textContent = '停止随机';
             randomBtn.classList.add('active');
@@ -511,12 +550,16 @@
             questionText.textContent = '🎲 正在抽取类别...';
             categoryGrid.style.display = 'none';
 
-            randomIndex = Math.floor(Math.random() * categories.length);
-            displayRandomCategory(randomIndex);
+            currentRandomIndex = pickWeightedIndex();
+            if (currentRandomIndex !== null) {
+                displayRandomCategory(currentRandomIndex);
+            }
 
             randomInterval = setInterval(() => {
-                randomIndex = (randomIndex + 1) % categories.length;
-                displayRandomCategory(randomIndex);
+                currentRandomIndex = pickWeightedIndex(currentRandomIndex);
+                if (currentRandomIndex !== null) {
+                    displayRandomCategory(currentRandomIndex);
+                }
             }, 90);
         }
 
@@ -528,7 +571,9 @@
             randomBtn.textContent = '开始随机';
             randomBtn.classList.remove('active');
 
-            const selectedCategory = categories[randomIndex];
+            const selectedCategory = (typeof currentRandomIndex === 'number')
+                ? categories[currentRandomIndex]
+                : undefined;
             if (selectedCategory) {
                 loadQuestionForCategory(selectedCategory.id);
             }
@@ -636,21 +681,10 @@
                 explanation.classList.add('show');
             }
 
-            controlBtn.textContent = '继续随机';
-            controlBtn.className = 'control-btn next';
-            randomBtn.disabled = false;
-        }
-
-        function continueRandom() {
-            if (randomActive) return;
+            controlBtn.textContent = '显示答案';
+            controlBtn.className = 'control-btn show-answer';
             controlBtn.disabled = true;
             randomBtn.disabled = false;
-            explanation.classList.remove('show');
-            explanation.textContent = '';
-            optionsContainer.innerHTML = '';
-            optionsContainer.style.display = 'none';
-            questionText.textContent = '点击“停止随机”锁定类别';
-            startRandom();
         }
 
         function resetGame() {
@@ -684,11 +718,7 @@
 
         controlBtn.addEventListener('click', () => {
             if (controlBtn.disabled) return;
-            if (!answerRevealed) {
-                showAnswer();
-            } else {
-                continueRandom();
-            }
+            showAnswer();
         });
 
         randomBtn.addEventListener('click', () => {
