@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知乐会 - 知识问答活动</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: clamp(6px, 0.8vh, 12px) clamp(15px, 2.5vw, 30px);
+            text-align: left;
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.35);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+            font-size: clamp(1.1rem, 2.5vw, 1.8rem);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .header-title {
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 8px 25px rgba(48, 56, 104, 0.4);
+            letter-spacing: 0.05em;
+            display: inline-flex;
+            align-items: baseline;
+            gap: 0.6em;
+        }
+
+        .title-brand {
+            font-size: 1.2em;
+            letter-spacing: 0.12em;
+            font-weight: 800;
+            position: relative;
+            background: linear-gradient(120deg, #ffe29f 0%, #ffd2a5 32%, #ff719a 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 10px 28px rgba(255, 124, 146, 0.45);
+        }
+
+        .title-brand::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -0.35em;
+            height: 0.18em;
+            border-radius: 0.18em;
+            background: linear-gradient(120deg, rgba(255, 237, 204, 0.85), rgba(255, 166, 193, 0.75));
+            box-shadow: 0 10px 18px rgba(255, 177, 153, 0.35);
+        }
+
+        .title-sub {
+            font-size: 0.78em;
+            letter-spacing: 0.08em;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: clamp(8px, 1.5vh, 16px) clamp(12px, 2vw, 24px);
+            text-align: center;
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-height: 0;
+        }
+
+        .question-type {
+            font-size: clamp(1rem, 2.5vw, 1.8rem);
+            margin-bottom: clamp(8px, 1vh, 12px);
+            opacity: 0.9;
+            font-weight: 500;
+            transition: opacity 0.12s ease;
+        }
+
+        .question-text {
+            font-size: clamp(1.3rem, 3.5vw, 2.5rem);
+            line-height: 1.4;
+            margin-bottom: clamp(10px, 1.5vh, 18px);
+            max-width: 95%;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            word-wrap: break-word;
+            transition: opacity 0.12s ease;
+        }
+
+        .options-container {
+            width: 100%;
+            max-width: 700px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: clamp(8px, 1.2vh, 14px);
+            margin-bottom: clamp(12px, 1.5vh, 18px);
+        }
+
+        .category-grid {
+            width: 100%;
+            max-width: 600px;
+            margin: clamp(10px, 1.5vh, 18px) auto;
+            display: none;
+            grid-template-columns: repeat(2, minmax(150px, 1fr));
+            gap: clamp(10px, 1.2vh, 14px);
+        }
+
+        .category-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.18);
+            border-radius: 10px;
+            padding: clamp(12px, 1.5vh, 18px) clamp(14px, 2vw, 22px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: clamp(8px, 1vh, 12px);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .category-icon {
+            font-size: clamp(1.3rem, 2.8vw, 2rem);
+        }
+
+        .category-name {
+            font-size: clamp(0.9rem, 1.6vw, 1.3rem);
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.92);
+            letter-spacing: 0.05em;
+        }
+
+        .option-item {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: clamp(10px, 1.5vh, 16px);
+            font-size: clamp(0.95rem, 2.2vw, 1.6rem);
+            transition: all 0.3s ease;
+            cursor: default;
+            text-align: left;
+            backdrop-filter: blur(10px);
+            word-wrap: break-word;
+        }
+
+        .option-item.correct {
+            background: rgba(76, 175, 80, 0.8);
+            border-color: #4caf50;
+            color: #ffffff;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .option-item.incorrect {
+            background: rgba(100, 100, 100, 0.3);
+            border-color: rgba(150, 150, 150, 0.5);
+            color: rgba(255, 255, 255, 0.5);
+            opacity: 0.6;
+        }
+
+        .explanation {
+            margin-top: clamp(10px, 1.5vh, 16px);
+            font-size: clamp(0.9rem, 1.8vw, 1.4rem);
+            line-height: 1.6;
+            max-width: 95%;
+            padding: clamp(10px, 1.5vh, 16px);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            border-left: 3px solid #4caf50;
+            display: none;
+            word-wrap: break-word;
+        }
+
+        .explanation.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .control-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: clamp(8px, 1.2vh, 14px) clamp(12px, 2vw, 24px);
+            display: flex;
+            justify-content: center;
+            gap: clamp(8px, 1.5vw, 14px);
+            border-top: 2px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            flex-shrink: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: clamp(8px, 1.2vh, 14px) clamp(20px, 3vw, 36px);
+            font-size: clamp(0.85rem, 1.6vw, 1.2rem);
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: clamp(90px, 16vw, 160px);
+        }
+
+        .control-btn.random {
+            background: linear-gradient(135deg, #f5ce62 0%, #e43603 100%);
+            color: #0f172a;
+        }
+
+        .control-btn.random:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(228, 54, 3, 0.35);
+        }
+
+        .control-btn.random.active {
+            background: linear-gradient(135deg, #f5ce62 0%, #f58d05 100%);
+            color: #0b1120;
+        }
+
+        .control-btn.next {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .control-btn.reset {
+            background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
+            color: #f0f9ff;
+        }
+
+        .control-btn.reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(67, 206, 162, 0.35);
+        }
+
+        .control-btn.next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .control-btn.next:active {
+            transform: translateY(0);
+        }
+
+        .control-btn.show-answer {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .control-btn.show-answer:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        .control-btn.show-answer:active {
+            transform: translateY(0);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .end-message {
+            font-size: clamp(1.2rem, 3vw, 2.2rem);
+            text-align: center;
+            padding: clamp(16px, 2.5vh, 24px);
+            display: none;
+        }
+
+        .end-message.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .options-container {
+                grid-template-columns: 1fr;
+                max-width: 100%;
+            }
+
+            .category-grid {
+                grid-template-columns: 1fr;
+                max-width: 100%;
+            }
+
+            .control-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-btn {
+                width: 100%;
+                min-width: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                font-size: clamp(0.9rem, 3.5vw, 1.4rem);
+                padding: clamp(5px, 0.8vh, 10px) clamp(10px, 1.5vw, 16px);
+            }
+
+            .question-text {
+                font-size: clamp(1rem, 4vw, 1.8rem);
+            }
+
+            .option-item {
+                font-size: clamp(0.85rem, 3vw, 1.3rem);
+                padding: clamp(8px, 1.2vh, 12px);
+            }
+
+            .control-btn {
+                font-size: clamp(0.75rem, 2.5vw, 1rem);
+                padding: clamp(8px, 1.2vh, 12px) clamp(16px, 2.5vw, 24px);
+            }
+        }
+
+        @media (max-height: 600px) {
+            .question-text {
+                font-size: clamp(1.1rem, 3vw, 2rem);
+            }
+
+            .option-item {
+                font-size: clamp(0.9rem, 2vw, 1.4rem);
+                padding: clamp(8px, 1.2vh, 12px);
+            }
+
+            .main-content {
+                padding: clamp(6px, 1.2vh, 12px) clamp(10px, 1.5vw, 16px);
+            }
+
+            .control-bar {
+                padding: clamp(6px, 1vh, 10px) clamp(10px, 1.5vw, 16px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header" id="header">
+        <span class="header-title"><span class="title-brand">知乐会</span><span class="title-sub">知识问答系统</span></span>
+    </div>
+
+    <div class="main-content" id="main-content">
+        <div class="question-type" id="question-type"></div>
+        <div class="question-text" id="question-text"></div>
+        <div class="category-grid" id="category-grid"></div>
+        <div class="options-container" id="options-container"></div>
+        <div class="explanation" id="explanation"></div>
+        <div class="end-message" id="end-message">
+            🎉 活动结束，感谢参与！🎉
+        </div>
+    </div>
+
+    <div class="control-bar">
+        <button class="control-btn random" id="random-btn">开始随机</button>
+        <button class="control-btn show-answer" id="control-btn" disabled>显示答案</button>
+        <button class="control-btn reset" id="reset-btn">重置</button>
+    </div>
+
+    <script src="questions.js"></script>
+    <script>
+        const categories = (window.quizData && Array.isArray(window.quizData.categories))
+            ? window.quizData.categories.map((category) => ({
+                id: category.id,
+                display: category.display,
+                repeatable: Boolean(category.repeatable),
+                questions: (category.questions || []).map(question => ({
+                    question: question.question,
+                    options: Array.isArray(question.options) ? question.options.slice() : [],
+                    correctAnswer: typeof question.correctAnswer === 'number' ? question.correctAnswer : -1,
+                    explanation: question.explanation || ''
+                }))
+            }))
+            : [];
+
+        const shuffle = (array) => {
+            const list = array.slice();
+            for (let i = list.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [list[i], list[j]] = [list[j], list[i]];
+            }
+            return list;
+        };
+
+        const questionType = document.getElementById('question-type');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const explanation = document.getElementById('explanation');
+        const controlBtn = document.getElementById('control-btn');
+        const randomBtn = document.getElementById('random-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const categoryGrid = document.getElementById('category-grid');
+        const endMessage = document.getElementById('end-message');
+
+        const categoryMap = new Map();
+        const categoryPools = new Map();
+        categories.forEach(category => {
+            categoryMap.set(category.id, category);
+        });
+
+        const initializePoolForCategory = (category) => {
+            const cloned = category.questions.map(question => ({
+                question: question.question,
+                options: Array.isArray(question.options) ? question.options.slice() : [],
+                correctAnswer: question.correctAnswer,
+                explanation: question.explanation
+            }));
+            categoryPools.set(category.id, shuffle(cloned));
+        };
+
+        const initializePools = () => {
+            categories.forEach(category => {
+                initializePoolForCategory(category);
+                });
+        };
+
+        initializePools();
+
+        let currentCategoryId = null;
+        let currentQuestion = null;
+        let answerRevealed = false;
+        let randomInterval = null;
+        let randomIndex = 0;
+        let randomActive = false;
+
+        function renderCategoryGrid() {
+            if (!categoryGrid) return;
+            const cards = categories.map(category => {
+                const parts = category.display.split(' ');
+                const icon = parts.shift() || '';
+                const name = parts.join(' ') || category.display;
+                return `
+                    <div class="category-card">
+                        <div class="category-icon">${icon}</div>
+                        <div class="category-name">${name}</div>
+                    </div>
+                `;
+            }).join('');
+            categoryGrid.innerHTML = cards;
+            categoryGrid.style.display = 'grid';
+        }
+
+        function init() {
+            questionType.style.opacity = 1;
+            questionText.style.opacity = 1;
+            questionType.textContent = '等待随机选择';
+            questionText.textContent = '点击“开始随机”按钮，抽取题目类别';
+            optionsContainer.innerHTML = '';
+            optionsContainer.style.display = 'none';
+            explanation.classList.remove('show');
+            explanation.textContent = '';
+            endMessage.classList.remove('show');
+            renderCategoryGrid();
+                }
+
+        function startRandom() {
+            if (randomActive) return;
+            randomActive = true;
+            randomBtn.textContent = '停止随机';
+            randomBtn.classList.add('active');
+            randomBtn.disabled = false;
+            controlBtn.disabled = true;
+            optionsContainer.style.display = 'none';
+            optionsContainer.innerHTML = '';
+            explanation.classList.remove('show');
+            explanation.textContent = '';
+            currentQuestion = null;
+            currentCategoryId = null;
+            questionText.textContent = '🎲 正在抽取类别...';
+            categoryGrid.style.display = 'none';
+
+            randomIndex = Math.floor(Math.random() * categories.length);
+            displayRandomCategory(randomIndex);
+
+            randomInterval = setInterval(() => {
+                randomIndex = (randomIndex + 1) % categories.length;
+                displayRandomCategory(randomIndex);
+            }, 90);
+        }
+
+        function stopRandom() {
+            if (!randomActive) return;
+            randomActive = false;
+            clearInterval(randomInterval);
+            randomInterval = null;
+            randomBtn.textContent = '开始随机';
+            randomBtn.classList.remove('active');
+
+            const selectedCategory = categories[randomIndex];
+            if (selectedCategory) {
+                loadQuestionForCategory(selectedCategory.id);
+            }
+        }
+
+        function displayRandomCategory(index) {
+            const category = categories[index];
+            if (!category) return;
+            questionType.style.opacity = 0.3;
+            questionText.style.opacity = 0.3;
+            requestAnimationFrame(() => {
+                questionType.textContent = `抽取候选：${category.display}`;
+                questionText.textContent = category.display;
+                requestAnimationFrame(() => {
+                    questionType.style.opacity = 1;
+                    questionText.style.opacity = 1;
+                });
+            });
+        }
+
+        function loadQuestionForCategory(categoryId) {
+            const category = categoryMap.get(categoryId);
+            if (!category) {
+                questionType.textContent = '暂无题目';
+                questionText.textContent = '该类别暂未配置题目，请继续随机其他类别。';
+                controlBtn.disabled = true;
+                return;
+            }
+
+            let pool = categoryPools.get(categoryId) || [];
+            if (pool.length === 0) {
+                if (category.repeatable) {
+                    initializePoolForCategory(category);
+                    pool = categoryPools.get(categoryId) || [];
+                    } else {
+                    questionType.textContent = `${category.display}（题目已用完）`;
+                    questionText.textContent = '该类别的题目已经全部抽完，请点击“开始随机”尝试其它类别，或点击“重置”恢复全部题库。';
+                    optionsContainer.innerHTML = '';
+                    optionsContainer.style.display = 'none';
+                    explanation.classList.remove('show');
+                    explanation.textContent = '';
+                    controlBtn.textContent = '显示答案';
+                    controlBtn.className = 'control-btn show-answer';
+                    controlBtn.disabled = true;
+                    randomBtn.disabled = false;
+                    return;
+                }
+            }
+
+            currentCategoryId = categoryId;
+            currentQuestion = pool.shift();
+            answerRevealed = false;
+
+            questionType.style.opacity = 0;
+            questionText.style.opacity = 0;
+            requestAnimationFrame(() => {
+                questionType.textContent = category.display;
+                questionText.textContent = currentQuestion.question;
+                requestAnimationFrame(() => {
+                    questionType.style.opacity = 1;
+                    questionText.style.opacity = 1;
+                });
+            });
+
+            optionsContainer.innerHTML = '';
+            if (currentQuestion.options && currentQuestion.options.length > 0) {
+                optionsContainer.style.display = 'grid';
+                currentQuestion.options.forEach(option => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'option-item';
+                    optionDiv.textContent = option;
+                    optionsContainer.appendChild(optionDiv);
+                });
+            } else {
+                optionsContainer.style.display = 'none';
+            }
+
+            explanation.classList.remove('show');
+            explanation.textContent = '';
+
+            controlBtn.textContent = '显示答案';
+            controlBtn.className = 'control-btn show-answer';
+            controlBtn.disabled = false;
+            randomBtn.disabled = true;
+            categoryGrid.style.display = 'none';
+        }
+
+        function showAnswer() {
+            if (!currentQuestion || answerRevealed) return;
+            answerRevealed = true;
+
+            if (currentQuestion.options && currentQuestion.options.length > 0 && currentQuestion.correctAnswer >= 0) {
+                const optionItems = optionsContainer.querySelectorAll('.option-item');
+                optionItems.forEach((item, index) => {
+                    if (index === currentQuestion.correctAnswer) {
+                        item.classList.add('correct');
+                    } else {
+                        item.classList.add('incorrect');
+                    }
+                });
+            }
+
+            if (currentQuestion.explanation) {
+                explanation.textContent = `💡 解析：${currentQuestion.explanation}`;
+                explanation.classList.add('show');
+            }
+
+            controlBtn.textContent = '继续随机';
+            controlBtn.className = 'control-btn next';
+            randomBtn.disabled = false;
+        }
+
+        function continueRandom() {
+            if (randomActive) return;
+            controlBtn.disabled = true;
+            randomBtn.disabled = false;
+            explanation.classList.remove('show');
+            explanation.textContent = '';
+            optionsContainer.innerHTML = '';
+            optionsContainer.style.display = 'none';
+            questionText.textContent = '点击“停止随机”锁定类别';
+            startRandom();
+        }
+
+        function resetGame() {
+            if (randomInterval) {
+                clearInterval(randomInterval);
+                randomInterval = null;
+            }
+            randomActive = false;
+            currentCategoryId = null;
+            currentQuestion = null;
+            answerRevealed = false;
+
+            initializePools();
+
+            randomBtn.textContent = '开始随机';
+            randomBtn.classList.remove('active');
+            randomBtn.disabled = false;
+
+            controlBtn.textContent = '显示答案';
+            controlBtn.className = 'control-btn show-answer';
+            controlBtn.disabled = true;
+
+            explanation.classList.remove('show');
+            explanation.textContent = '';
+            optionsContainer.innerHTML = '';
+            optionsContainer.style.display = 'none';
+            questionType.style.opacity = 1;
+            questionText.style.opacity = 1;
+            init();
+        }
+
+        controlBtn.addEventListener('click', () => {
+            if (controlBtn.disabled) return;
+            if (!answerRevealed) {
+                showAnswer();
+            } else {
+                continueRandom();
+            }
+        });
+
+        randomBtn.addEventListener('click', () => {
+            if (randomActive) {
+                stopRandom();
+            } else {
+                startRandom();
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            resetGame();
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                if (randomActive) {
+                    stopRandom();
+                } else if (!controlBtn.disabled) {
+                    if (!answerRevealed) {
+                        showAnswer();
+                    } else {
+                        continueRandom();
+                    }
+                } else {
+                    startRandom();
+                }
+            }
+        });
+
+        init();
+        questionType.style.opacity = 1;
+        questionText.style.opacity = 1;
+    </script>
+</body>
+</html>
